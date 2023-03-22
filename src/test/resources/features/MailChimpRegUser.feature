@@ -10,5 +10,5 @@ Feature: MailChimpRegUser
 
     Examples: #Usernames will be unique everytime, since they are timestamped
       | browser | username   | email          | password | created |
-      | chrome  | LasseKongo | hej@hej.com    | XDR%6tfc | no      |
-      | firefox | LasseKongo | lasse@kongo.se | t6       | no      |
+      | chrome  | LasseKongo | lasse@kongo.se | XDR%6tfc | yes     |
+      | firefox | BrittMarie | britt@hej.se   | t6       | no      |
