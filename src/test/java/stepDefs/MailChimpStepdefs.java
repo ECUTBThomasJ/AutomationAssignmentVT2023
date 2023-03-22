@@ -11,6 +11,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -98,6 +99,7 @@ public class MailChimpStepdefs {
         String actual = "";
 
         try {
+            wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(3));
             waitForClickableById("recaptcha-help-button");
             /*captchaButton = driver.findElement(By.id("recaptcha-help-button"));
             captchaButton.click();*/
@@ -126,14 +128,16 @@ public class MailChimpStepdefs {
     }
 
     private void waitForVisibleByCSS(String selector) {
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(selector)));
     }
 
     private void waitForClickableById(String id) {
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        Actions action = new Actions(driver);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         wait.until(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement element = driver.findElement(By.id(id));
+        action.moveToElement(element).perform();
         element.click();
     }
 
