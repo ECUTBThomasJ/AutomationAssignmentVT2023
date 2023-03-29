@@ -17,6 +17,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -42,6 +43,7 @@ public class MailChimpStepdefs {
 
         } else if (browser.equalsIgnoreCase("firefox")) {
             FirefoxOptions firefoxOptions = new FirefoxOptions();
+            firefoxOptions.setBinary("C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe");
             firefoxOptions.addArguments("-private");
             setBrowser = browser;
             driver = new FirefoxDriver(firefoxOptions);
@@ -57,9 +59,16 @@ public class MailChimpStepdefs {
 
     @And("a unique {string} have been entered")
     public void aValidHaveBeenEntered(String username) {
-
         WebElement userNameField = driver.findElement(By.id("new_username"));
-        if(username != null){
+
+        if (username.equals("#100Chars")) {
+            username = randomizedString(110);
+            System.out.println(username);
+            userNameField.sendKeys(username);
+        } else if (username.equals("#alreadyUsed")) {
+            username = "alreadyUsed";
+            userNameField.sendKeys(username);
+        } else {
             Date now = new Date();
             username += String.format("%1$tY%1$tm%1$td%1$tH%1$tM%1$tS", now);
             System.out.println(username);
@@ -90,51 +99,83 @@ public class MailChimpStepdefs {
         waitForClickableById("create-account-enabled");
     }
 
-    @Then("a new account is {string}")
-    public void aNewAccountIs(String expected) {
-        WebElement captchaButton;
-        WebElement checkEmail;
+    @Then("a new account is {string} with {string}")
+    public void aNewAccountIs(String expected, String message) {
+        expected = expected += " - " + message;
         String ceText = "error";
         String capValue = "error";
         String actual = "";
+        String actualMessage = "error";
+
+        try {
+            waitForVisibleByCSS(".invalid-error");
+            WebElement error = driver.findElement(By.cssSelector(".invalid-error"));
+
+            actualMessage = error.getText();
+
+        }catch (Exception ignore){
+            System.out.println("No error message - This is success!");
+        }
 
         try {
             wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(3));
             waitForClickableById("recaptcha-help-button");
-            /*captchaButton = driver.findElement(By.id("recaptcha-help-button"));
-            captchaButton.click();*/
 
+            waitForVisibleByCSS(".rc-challenge-help");
             WebElement helpInfo = driver.findElement(By.cssSelector(".rc-challenge-help"));
             capValue = helpInfo.getText();
         } catch (Exception ignored) {
+            System.out.println("Failed to find captcha.");
         }
         try {
             waitForVisibleByCSS(".\\!margin-bottom--lv3");
-            checkEmail = driver.findElement(By.cssSelector(".\\!margin-bottom--lv3"));
+            WebElement checkEmail = driver.findElement(By.cssSelector(".\\!margin-bottom--lv3"));
             ceText = checkEmail.getText();
         } catch (Exception ignored) {
+            System.out.println("Failed to find success message.");
         }
 
-        if ((capValue.equals("Select each image that contains the object" +
-                " described in the text or in the image at the top of the UI. " +
-                "Then click Verify. To get a new challenge, click the reload icon. " +
-                "Learn more.")) || ceText.equals("Check your email")) {
-            actual = "yes";
+        System.out.println(capValue);
+
+        if ((capValue.contains("click Verify")) || ceText.equals("Check your email")) {
+            actual = "created - success";
+            System.out.println("If statement for captcha run.");
+
         } else {
-            actual = "no";
+            if(actualMessage.contains("Great minds think alike")){
+                actualMessage = "Username already used";
+            }
+            System.out.println(actualMessage);
+            actual = "not created" + " - " + actualMessage;
+            System.out.println(actual);
         }
 
         assertEquals(expected, actual);
     }
+    private String randomizedString(int length) {
+        String name = "";
 
+        int max = 26;
+        int min = 1;
+        int range = max - min + 1;
+        char letter;
+        int rand;
+
+        for (int i = 0; i < length; i++) {
+            rand = (int) (Math.random() * range) + min;
+            letter = (char) (rand + 96);
+            name += letter;
+        }
+        return name;
+    }
     private void waitForVisibleByCSS(String selector) {
-        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(selector)));
     }
 
     private void waitForClickableById(String id) {
         Actions action = new Actions(driver);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.elementToBeClickable(By.id(id)));
         WebElement element = driver.findElement(By.id(id));
         action.moveToElement(element).perform();
@@ -148,6 +189,4 @@ public class MailChimpStepdefs {
         }
         driver.quit();
     }
-
-
 }
