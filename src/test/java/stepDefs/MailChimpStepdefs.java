@@ -113,7 +113,7 @@ public class MailChimpStepdefs {
             actualMessage = error.getText();
 
         }catch (Exception ignore){
-            System.out.println("No error message - This is success!");
+            System.out.println("No error message - Test should result in success!");
         }
 
         try {
